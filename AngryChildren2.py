@@ -2,12 +2,14 @@ import sys
 
 N=int(input())
 K=int(input())
-W=[int(i) for i in input().split()]
+W=[]
+for i in range(0,N):
+ W.append(int(input()))
 
 def solve(k,w):
  w.sort()
  w=[0]+w
- s=w
+ s=w[:]
  for i in range(1,len(s)):
   s[i]+=s[i-1]
  min=0
