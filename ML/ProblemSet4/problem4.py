@@ -23,7 +23,7 @@ class VorClassifier:
   ridge_points = self.vor2d.ridge_points
   ridge_cat = self.cat[ridge_points]
   lx = ridge_cat[:,1]!=ridge_cat[:,2]
-  points = ridge_points(np.unique(ridge_points[lx,:].ravel()))
+  points = ridge_points[np.unique(ridge_points[lx,:].ravel())]
   self.vor2dpur = Voronoi(points)
 
   def draw(self):
