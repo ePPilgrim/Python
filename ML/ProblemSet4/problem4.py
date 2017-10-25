@@ -32,7 +32,7 @@ class VorClassifier:
   voronoi_plot_2d(self.vor2dpur)
   plt.show()
 
-cat = np.zeros(20)
+cat = np.zeros(20) 
 cat[10:20]=1
 
 VorClass = VorClassifier(trset,cat)
