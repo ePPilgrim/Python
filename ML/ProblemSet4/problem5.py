@@ -16,7 +16,7 @@ class SinglePoint:
   veccat = np.zeros((100,6))
   for i in range(0,100):
    point = self.testset[i,:].reshape(1,1,6)
-   dist = self.trainset * point
+   dist = (self.trainset - point)**2
    s = np.zeros(dist.shape[0:2])
    for j in range(0,6):
     s += dist[:,:,j]
@@ -31,4 +31,7 @@ class SinglePoint:
   return np.argmin(np.min(dists,1)) + 1
 
 obj = SinglePoint(1000000)
-
+obj.calc()
+h = obj.veccat[:,5].reshape(100,1)
+h = obj.veccat == h
+res = np.sum(h,0)
