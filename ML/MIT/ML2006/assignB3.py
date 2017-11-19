@@ -17,6 +17,7 @@ def strimage(a):
 #strimage(strimg)
 
 f1 = './data/train-01-images.svm'
+p1 = './svm_light_windows64/svm_predictions'
 f2 = './data/train-01-images-W.svm'
 f3 = './data/test-01-images.svm'
 
@@ -26,4 +27,21 @@ def show_pic_list(filename, lst):
  f.close()
  for ind in lst:
   strimage(str[ind])
+
+def find_miss_pic(trainf,testf):
+ f = open(trainf,'r')
+ str = f.read().split('\n')
+ f.close()
+ testv = np.loadtxt(testf,ndmin=1)
+ trainv = np.array([float(i[0:2]) for i in str])
+ lx = ((testv*trainv)<0.0)
+ indv = np.arange(lx.size)[lx]
+ show_pic_list(trainf,indv)
+
+find_miss_pic(f3, p1) 
+
+Errb = np.array([[0.0, 9.0, 1.0],[1e-11,5923.0, 980.0],[5e-11,1583.0, 274.0],[1e-10,212.0, 21.0],[5e-10,50.0, 5.0],[1e-9,31.0,4.0],[5e-9,25.0,2.0],[1e-8,21.0,2.0],[5e-8,13.0,2.0],[1e-7,10.0,1.0],[5e-7,6.0,1.0],[1e-6,2.0,1.0],[5e-6,0.0,2.0],[1e-5,0.0,2.0],[5e-5,0.0,2.0],[0.001,0.0,2.0]])
+
+den = np.array([1.0,12665.0,2115.0])
+Errc = np.array([[0.0, 1347.0, 8.0],[1e-11,5979.0, 980.0],[5e-11,4325.0, 631.0],[1e-10,1542.0, 38.0],[5e-10,1332.0, 7.0],[1e-9,1316.0,3.0],[5e-9,1307.0,2.0],[1e-8,21.0,2.0],[5e-8,13.0,2.0],[1e-7,10.0,1.0],[5e-7,6.0,1.0],[1e-6,2.0,1.0],[5e-6,0.0,2.0],[1e-5,0.0,2.0],[5e-5,0.0,2.0],[0.001,0.0,2.0]])
 
