@@ -3,6 +3,28 @@ import numpy.random as npr
 import numpy.linalg as lin
 import matplotlib.pyplot as plt
 
+def linear_regress(y,X):
+ return lin.multi_dot([lin.inv(np.dot(X.T,X)),X.T,y])
+
+def linear_pred(thau, X):
+ return np.dot(X,thau)
+
+def feature_mapping(X, case):
+ if case == 2:
+  X = np.log(X)*2.0
+ return np.hstack((X,np.ones(X.shape[0])[:,np.newaxis])
+
+def active_learn(X, k1, k2):
+ allidx = np.arange(X.shape[0])
+ idx = np.arange(k1)
+ idx_= np.setdiff1d(allidx,idx)
+ for i in range(k2):
+  A = X[idx,:]
+  A = lin.inv(np.dot(A.T,A))
+  
+  
+ 
+
 class LinReg:
  def __init__(self,n):
   self.X = npr.uniform(-1.0, 1.0, (n, 3))
