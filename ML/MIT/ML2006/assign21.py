@@ -21,6 +21,10 @@ def active_learn(X, k1, k2):
  for i in range(k2):
   A = X[idx,:]
   A = lin.inv(np.dot(A.T,A))
+  V = np.dot(A,X[idx_,:].T)
+  v1 = np.sum(V*V,axis=0)
+  v2 = np.sum(1.0 + V * X[idx_,:].T, axis=0)
+  v = v1/v2
   
   
  
