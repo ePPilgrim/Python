@@ -17,17 +17,16 @@ def feature_mapping(X, case):
 def active_learn(X, k1, k2):
  allidx = np.arange(X.shape[0])
  idx = np.arange(k1)
- idx_= np.setdiff1d(allidx,idx)
  for i in range(k2):
+  idx_= np.setdiff1d(allidx,idx)
   A = X[idx,:]
   A = lin.inv(np.dot(A.T,A))
   V = np.dot(A,X[idx_,:].T)
   v1 = np.sum(V*V,axis=0)
   v2 = np.sum(1.0 + V * X[idx_,:].T, axis=0)
   v = v1/v2
-  
-  
- 
+  np.append(idx,idx_[np.argmax(v)])
+ return idx
 
 class LinReg:
  def __init__(self,n):
