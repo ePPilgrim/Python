@@ -1,38 +1,16 @@
-import sys
 
-class Alilang:
- P = 100000000007
- def __init__(self,n,m):
-  self.n = n
-  self.m = m
-  self.amount = []
-  self.res = n - n//2
- 
- def ddevide(self):
-  n = self.n
-  while n > 0:
-   m = n//2
-   self.amount.append([(m + 1)%2, n%2, n - m, n - m])
-   n = m
-  self.amount.append([0,0,0,0])
- 
- def solve(self):
-  self.ddevide()
-  for i in range(1,self.m):
-   for j in range(0,len(self.amount)-2):
-    sum1 = self.amount[j+2][3]
-    sum2 = self.amount[j+1][3] - sum1
-    n = self.amount[j][2]
-    if sum2<0:
-     sum2 += self.P
-    sum = (sum1*n)%self.P
-    m = 1+n//2
-    if tuple(self.amount[j][0:2]) == (1,0): 
-     m = n//2
-    self.amount[j][3] = ((sum1 + (m*sum2)%self.P)%self.P + (n*self.res)%self.P)%self.P
-   self.amount[-2][-1]=self.res
-   self.res = self.amount[0][-1]
-  return self.amount[0][-1]
+import sys
+import numpy as np
+
+
+def Alilang(n, m):
+    prime = 100000000007
+    pos = np.arange(n//2 + 1, n + 1,dtype = int)
+    k = int(np.ceil(np.log2(n)))
+    mat = np.zeros((k,len(pos)),dtype=int)
+    #mat = mat + 
+    
+    
 
 T=1#int(input())
 for i in range(0, T):
