@@ -1,7 +1,7 @@
 import sys
 
 
-prime = int(10e9 + 7)
+prime = 1000000007
 
 
 def kingdomDivision(graph, n):
