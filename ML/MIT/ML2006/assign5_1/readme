@@ -1,0 +1,36 @@
+UPDATE - 11/29/06
+
+I've added tarballs for easy downloading:
+
+everything.tgz  - contains everything in the directory
+neededfiles.tgz - contains the files that you need for the assignment
+
+---
+
+You don't need to run prepare.sh; all that has already been done
+and the scripts are included for completeness.  You can proceed
+immediately to loading things into MATLAB and deriving the EM
+updates.
+
+Once you are finished inserting the proper lines in ibm2_train_lm.m
+and ibm2_train.m, you should be able to run a session like this:
+
+% almost instantaneous
+delex = lexicon('data-de');
+% almost a minute
+enlex = lexicon('data-en');
+% may take several minutes (but has status indicator)
+[english,deutsch,lmenglish]=europarl();
+% may also take several minutes (with status indicator)
+[N,mmax]=size(english); mmax=size(lmenglish,2)-mmax;
+[LM,LMc]=ibm2_train_lm([lmenglish;english,sparse(N,mmax)]);
+% should be very quick
+[T,D,lom]=ibm2_train(english,deutsch);
+% also very quick
+germans = klaus();
+for i=1:size(germans,1)
+  german = germans(i,:)
+  englisch = ibm2_beam_decoder(T,D,lom,LM,german)
+  numtostr(delex,german)
+  numtostr(enlex,englisch)
+end
