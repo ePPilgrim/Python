@@ -1,6 +1,5 @@
 
 import numpy as np
-import scipy as sc
 import scipy.sparse as sp
 
 indexpack = lambda x, y, z: 50 * (50 * z + y ) + x
@@ -36,8 +35,8 @@ def ibm2_train_lm(english):
 
 
 def ibm2_train(english,deutsch):
-    en_vocab = english.max()
-    de_vocab = deutsch.max()
+    en_vocab = int(english.max())
+    de_vocab = int(deutsch.max())
     emax = english.shape[1]
     dmax = deutsch.shape[1]
     N = english.shape[0]
@@ -46,10 +45,10 @@ def ibm2_train(english,deutsch):
     print('Initializing.....')
     T = sp.csc_matrix(de_vocab, en_vocab)
     D = sp.csc_matrix(((dmax+1) * 50 ** 2, emax))
-    lom = np.zeros(dmax,emax)
+    lom = np.zeros((dmax,emax))
     for i in range(N):
-        l = english[i][english[i,:] != 0]
-        m = deutsch[i][deutsch[i,:] != 0]
+        (sink, sink, l) = sp.find(english[i,:])
+        (sink, sink, m) = sp.find(deutsch[i,:])
         T[m,l] = 1 / m.size
         D[indexpack(np.arange(m.size), l.size, m.size), np.arange(l.size)] = 1 / l.size
         lom[m.size, l.size] += 1 
@@ -62,18 +61,18 @@ def ibm2_train(english,deutsch):
         tNorm = np.zeros(en_vocab)
         dNorm = np.zeros((dmax+1) * 50 * 50)
         for idx in range(N):
-            l = english[idx][english[idx,:] != 0].size
-            m = deutsch[idx][deutsch[idx,:] != 0].size
-            for j in range(m):
-                (Jd,Id,Vd) = sp.find(D[indexpack(j,l,m),:])
-                ll = english[idx][Id]
+            (sink, sink, l) = sp.find(english[idx,:])
+            (sink, sink, m) = sp.find(deutsch[idx,:])
+            for j in range(m.size):
+                (Jd,Id,Vd) = sp.find(D[indexpack(j,l.size,m.size),:])
+                ll = english[idx,Id].toarray()
                 den = np.dot(T[j,ll].toarray(), Vd)
-                for i in range(l):
-                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, l, m), i] / den
+                for i in range(l.size):
+                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, l.size, m.size), i] / den
                     Tn[deutsch[idx,j],english[idx,i]] += val
-                    Dn[indexpack(j,l,m),i] += val
+                    Dn[indexpack(j,l.size,m.size),i] += val
                     tNorm[english[idx,i]] += val
-                    dNorm[indexpack(j, l, m)] += val
+                    dNorm[indexpack(j, l.size, m.size)] += val
         T, D = Tn, Dn
         for enword in range(en_vocab):
             T[:,enword] /= tNorm[enword]   
@@ -91,14 +90,16 @@ def europarl():
     dec_file = open('filt-de-counts','r')
     de_file  = open('filt-de','r')
     enlens = np.array([int(x) for x in enc_file.read().split()])
-    lmlens = np.array([int(x) for x in lmc_file.read().split()])
     delens = np.array([int(x) for x in dec_file.read().split()])
+    lmlens = np.array([int(x) for x in lmc_file.read().split()])
+    
     N = len(enlens)
     english = sp.csc_matrix((N,max(enlens)))
     lmenglish = sp.csc_matrix((len(lmlens),max(lmlens)))
     deutsch = sp.csc_matrix((N,max(delens)))
-    fmtstr = 'Loaded %5d sentence pairs'; fmtstrl = 27;
-    print(fmtstr, 0);
+    fmtstr = 'Loaded %5d sentence pairs'
+    fmtstrl = 27
+    print(fmtstr, 0)
     for i in range(N):
         english[i,np.arange(enlens[i])] = np.array([int(x) for x in en_file.read(enlens[i]).split()])
         deutsch[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.read(delens[i]).split()])
@@ -107,8 +108,9 @@ def europarl():
                 print('\b')
         print(fmtstr, i)
     print('\n');
-    fmtstr = 'Loaded %5d sentences (for the lm)'; fmtstrl = 35;
-    print(fmtstr, 0);
+    fmtstr = 'Loaded %5d sentences (for the lm)'
+    fmtstrl = 35
+    print(fmtstr, 0)
     for i in range(len(lmlens)):
         lmenglish[i, np.arange(lmlens[i])] = np.array([int(x) for x in lm_file.read(lmlens[i]).split()])
         if i % 100 == 0:
@@ -172,3 +174,23 @@ def lexicon(fname):
     fde = open(fname, 'r');
     lex = lex + fde.read().split()
     return lex
+
+
+delex = lexicon('data-de')
+# almost a minute
+enlex = lexicon('data-en')
+# may take several minutes (but has status indicator)
+(english,deutsch,lmenglish)=europarl()
+# may also take several minutes (with status indicator)
+(N,mmax) = english.shape 
+mmax = lmenglish.shape[1] - mmax
+(LM , LMc) = ibm2_train_lm(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax))])]))
+# should be very quick
+(T,D,lom)=ibm2_train(english , deutsch);
+# also very quick
+germans = klaus();
+for i in range(germans.shape[0]):
+    german = germans[i,:]
+    englisch = ibm2_beam_decoder(T,D,lom,LM,german)
+    numtostr(delex,german)
+    numtostr(enlex,englisch)
