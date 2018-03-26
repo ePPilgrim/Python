@@ -3,12 +3,12 @@ import numpy as np
 import scipy.sparse as sp
 
 indexpack = lambda x, y, z: 50 * (50 * z + y ) + x
-twowordpack = lambda x, y: y * 20000 + x
-numtostr = lambda lex, num: [lex[x] for x in num if x != 0]
+twowordpack = lambda x, y: y * 20001 + x
+numtostr = lambda lex, num: [lex[x - 1] for x in num if x != 0]
 
 def ibm2_train_lm(english):
-    LM = sp.csc_matrix((400000000,20000))
-    LMc = sp.csc_matrix((20000,20000))
+    LM = sp.csc_matrix((20001 ** 2,20001))
+    LMc = sp.csc_matrix((20001,20001))
     
     #We define three additional tokens:
     UNK = 1  # The uknown word (for words unseen previously)
@@ -28,15 +28,15 @@ def ibm2_train_lm(english):
             m2 = english[i][j]
     
     (I, J, V) = sp.find(LM)
-    Jr = I // 20000
-    Jc = I % 20000
+    Jr = I // 20001
+    Jc = I % 20001
     LM[I, J] = V / LMc[Jr, Jc]
     return (LM, LMc)
 
 
 def ibm2_train(english,deutsch):
-    en_vocab = int(english.max())
-    de_vocab = int(deutsch.max())
+    en_vocab = 1 + int(english.max())
+    de_vocab = 1 + int(deutsch.max())
     emax = english.shape[1]
     dmax = deutsch.shape[1]
     N = english.shape[0]
@@ -53,7 +53,7 @@ def ibm2_train(english,deutsch):
         D[indexpack(np.arange(m.size), l.size, m.size), np.arange(l.size)] = 1 / l.size
         lom[m.size, l.size] += 1 
     #[trash,lom] = max(lom,[],2);
-    lom = lom.max(1) #????
+    lom = np.argmax(lom,axis = 1)
     print('done.\n');
     for em_iter_idx in range(50):
         Tn = sp.csc_matrix((de_vocab, en_vocab));
@@ -125,8 +125,8 @@ def ibm2_beam_decoder(T,D,lom,LM,deutsch):
     beamwidth  = 20
     m          = len(sp.find(deutsch)[0])
     fwords     = np.log(T[deutsch[:,np.arange(m)].toarray(), :].max(1).toarray())
-    hypotheses = [2,3]
-    covered    = [0] * m
+    hypotheses = [[2,3]]
+    covered    = [[0] * m]
     scores     = [0]
     fcosts     = [sum(fwords)]
     l          = lom[m]
@@ -136,17 +136,18 @@ def ibm2_beam_decoder(T,D,lom,LM,deutsch):
         for hidx in range(len(hypotheses)):
             for j in [ x for x in range(len(covered[hidx])) if covered[hidx][x] == 0]:
                 for ne in sp.find(T[deutsch[j],:])[1]:
-                    nc = covered[hidx]
-                    nc[j] += 1
-                    ns = scores[hidx] \
-                    + np.log(eps + T[deutsch[j],ne]) \
-                    + np.log(eps + D[indexpack(j,l,m),i]) \
-                    + np.log(eps + LM[twowordpack(hypotheses[hidx][i],hypotheses[hidx][i+1]), ne])
-                    nf = ns + np.dot(fwords, 1 - np.array(nc))
-                    nhypotheses.append(hypotheses[hidx].append(ne));
-                    ncovered.append(nc)
-                    nscores.append(ns)
-                    nfcosts.append(nf)
+                    if ne != 0:
+                        nc = covered[hidx]
+                        nc[j] += 1
+                        ns = scores[hidx] \
+                        + np.log(eps + T[deutsch[j],ne]) \
+                        + np.log(eps + D[indexpack(j,l,m),i]) \
+                        + np.log(eps + LM[twowordpack(hypotheses[hidx][i],hypotheses[hidx][i+1]), ne])
+                        nf = ns + np.dot(fwords, 1 - np.array(nc))
+                        nhypotheses.append(hypotheses[hidx].append(ne));
+                        ncovered.append(nc)
+                        nscores.append(ns)
+                        nfcosts.append(nf)
     # cut out a beam
         beam = np.argsort([-x for x in nfcosts])
         beam = beam[ : min(beamwidth,len(nfcosts))]
