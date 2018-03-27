@@ -94,15 +94,15 @@ def europarl():
     lmlens = np.array([int(x) for x in lmc_file.read().split()])
     
     N = len(enlens)
-    english = sp.csc_matrix((N,max(enlens)))
-    lmenglish = sp.csc_matrix((len(lmlens),max(lmlens)))
-    deutsch = sp.csc_matrix((N,max(delens)))
+    english = sp.csc_matrix((N,max(enlens)),dtype = 'int')
+    lmenglish = sp.csc_matrix((len(lmlens),max(lmlens)),dtype = 'int')
+    deutsch = sp.csc_matrix((N,max(delens)),dtype = 'int')
     fmtstr = 'Loaded %5d sentence pairs'
     fmtstrl = 27
     print(fmtstr, 0)
     for i in range(N):
-        english[i,np.arange(enlens[i])] = np.array([int(x) for x in en_file.read(enlens[i]).split()])
-        deutsch[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.read(delens[i]).split()])
+        english[i,np.arange(enlens[i])] = np.array([int(x) for x in en_file.readline().split()])
+        deutsch[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.readline().split()])
         if i % 100 == 0:
             for bcnt in range(fmtstrl):
                 print('\b')
@@ -176,22 +176,24 @@ def lexicon(fname):
     lex = lex + fde.read().split()
     return lex
 
+def Solve():
+    delex = lexicon('data-de')
+    # almost a minute
+    enlex = lexicon('data-en')
+    # may take several minutes (but has status indicator)
+    (english,deutsch,lmenglish)=europarl()
+    # may also take several minutes (with status indicator)
+    (N,mmax) = english.shape 
+    mmax = lmenglish.shape[1] - mmax
+    (LM , LMc) = ibm2_train_lm(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax))])]))
+    # should be very quick
+    (T,D,lom)=ibm2_train(english , deutsch);
+    # also very quick
+    germans = klaus();
+    for i in range(germans.shape[0]):
+        german = germans[i,:]
+        englisch = ibm2_beam_decoder(T,D,lom,LM,german)
+        numtostr(delex,german)
+        numtostr(enlex,englisch)
 
-delex = lexicon('data-de')
-# almost a minute
-enlex = lexicon('data-en')
-# may take several minutes (but has status indicator)
-(english,deutsch,lmenglish)=europarl()
-# may also take several minutes (with status indicator)
-(N,mmax) = english.shape 
-mmax = lmenglish.shape[1] - mmax
-(LM , LMc) = ibm2_train_lm(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax))])]))
-# should be very quick
-(T,D,lom)=ibm2_train(english , deutsch);
-# also very quick
-germans = klaus();
-for i in range(germans.shape[0]):
-    german = germans[i,:]
-    englisch = ibm2_beam_decoder(T,D,lom,LM,german)
-    numtostr(delex,german)
-    numtostr(enlex,englisch)
+Solve()
