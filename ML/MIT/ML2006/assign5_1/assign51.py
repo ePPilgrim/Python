@@ -19,14 +19,14 @@ def ibm2_train_lm(english):
         m1 = S0
         m2 = S1
         for j in range(english.shape[1]):
-            if english[i][j] == 0:
+            if english[i,j] == 0:
                 break
             m2m1 = twowordpack(m1, m2)
-            LM[m2m1,english[i][j]] += 1
+            LM[m2m1,english[i,j]] += 1
             LMc[m2,m1] += 1
             m1 = m2
-            m2 = english[i][j]
-    
+            m2 = english[i,j]
+        print(i)
     (I, J, V) = sp.find(LM)
     Jr = I // 20001
     Jc = I % 20001
@@ -43,7 +43,7 @@ def ibm2_train(english,deutsch):
     
     #initialize T and D
     print('Initializing.....')
-    T = sp.csc_matrix(de_vocab, en_vocab)
+    T = sp.csc_matrix((de_vocab, en_vocab))
     D = sp.csc_matrix(((dmax+1) * 50 ** 2, emax))
     lom = np.zeros((dmax,emax))
     for i in range(N):
@@ -92,32 +92,15 @@ def europarl():
     enlens = np.array([int(x) for x in enc_file.read().split()])
     delens = np.array([int(x) for x in dec_file.read().split()])
     lmlens = np.array([int(x) for x in lmc_file.read().split()])
-    
     N = len(enlens)
     english = sp.csc_matrix((N,max(enlens)),dtype = 'int')
     lmenglish = sp.csc_matrix((len(lmlens),max(lmlens)),dtype = 'int')
     deutsch = sp.csc_matrix((N,max(delens)),dtype = 'int')
-    fmtstr = 'Loaded %5d sentence pairs'
-    fmtstrl = 27
-    print(fmtstr, 0)
     for i in range(N):
         english[i,np.arange(enlens[i])] = np.array([int(x) for x in en_file.readline().split()])
         deutsch[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.readline().split()])
-        if i % 100 == 0:
-            for bcnt in range(fmtstrl):
-                print('\b')
-        print(fmtstr, i)
-    print('\n');
-    fmtstr = 'Loaded %5d sentences (for the lm)'
-    fmtstrl = 35
-    print(fmtstr, 0)
     for i in range(len(lmlens)):
-        lmenglish[i, np.arange(lmlens[i])] = np.array([int(x) for x in lm_file.read(lmlens[i]).split()])
-        if i % 100 == 0:
-            for bcnt in range(fmtstrl):
-                print('\b')
-        print(fmtstr, i);
-    print('\n');
+        lmenglish[i, np.arange(lmlens[i])] = np.array([int(x) for x in lm_file.readline().split()])
     return (english, deutsch, lmenglish)
 
 
@@ -148,7 +131,6 @@ def ibm2_beam_decoder(T,D,lom,LM,deutsch):
                         ncovered.append(nc)
                         nscores.append(ns)
                         nfcosts.append(nf)
-    # cut out a beam
         beam = np.argsort([-x for x in nfcosts])
         beam = beam[ : min(beamwidth,len(nfcosts))]
         hypotheses = [nhypotheses[i] for i in beam]
@@ -185,7 +167,8 @@ def Solve():
     # may also take several minutes (with status indicator)
     (N,mmax) = english.shape 
     mmax = lmenglish.shape[1] - mmax
-    (LM , LMc) = ibm2_train_lm(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax))])]))
+    mat=sp.csc_matrix(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax),dtype='int')])]))
+    (LM , LMc) = ibm2_train_lm(mat)
     # should be very quick
     (T,D,lom)=ibm2_train(english , deutsch);
     # also very quick
