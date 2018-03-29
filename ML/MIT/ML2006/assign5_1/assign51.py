@@ -169,6 +169,7 @@ def Solve():
     mmax = lmenglish.shape[1] - mmax
     mat=sp.csc_matrix(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax),dtype='int')])]))
     (LM , LMc) = ibm2_train_lm(mat)
+    sp.save_npz('lmm',LM)
     # should be very quick
     (T,D,lom)=ibm2_train(english , deutsch);
     # also very quick
