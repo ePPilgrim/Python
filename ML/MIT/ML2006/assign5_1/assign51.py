@@ -44,35 +44,35 @@ def ibm2_train(english,deutsch):
     #initialize T and D
     print('Initializing.....')
     T = sp.csc_matrix((de_vocab, en_vocab))
-    D = sp.csc_matrix(((dmax+1) * 50 ** 2, emax))
+    D = sp.csc_matrix((dmax * 50 ** 2, emax))
     lom = np.zeros((dmax,emax))
     for i in range(N):
         (sink, sink, l) = sp.find(english[i,:])
         (sink, sink, m) = sp.find(deutsch[i,:])
         T[m,l] = 1 / m.size
-        D[indexpack(np.arange(m.size), l.size, m.size), np.arange(l.size)] = 1 / l.size
-        lom[m.size, l.size] += 1 
+        D[indexpack(np.arange(m.size) - 1, l.size, m.size) - 1, np.arange(l.size) - 1] = 1 / l.size
+        lom[m.size-1, l.size-1] += 1 
     #[trash,lom] = max(lom,[],2);
     lom = np.argmax(lom,axis = 1)
     print('done.\n');
     for em_iter_idx in range(50):
         Tn = sp.csc_matrix((de_vocab, en_vocab));
-        Dn = sp.csc_matrix(((dmax+1) * 50 ** 2, emax));
+        Dn = sp.csc_matrix((dmax * 50 ** 2, emax));
         tNorm = np.zeros(en_vocab)
-        dNorm = np.zeros((dmax+1) * 50 * 50)
+        dNorm = np.zeros(dmax * 50 * 50)
         for idx in range(N):
             (sink, sink, l) = sp.find(english[idx,:])
             (sink, sink, m) = sp.find(deutsch[idx,:])
             for j in range(m.size):
-                (Jd,Id,Vd) = sp.find(D[indexpack(j,l.size,m.size),:])
+                (Jd,Id,Vd) = sp.find(D[indexpack(j,l.size,m.size)-1,:])
                 ll = english[idx,Id].toarray()
-                den = np.dot(T[j,ll].toarray(), Vd)
+                den = np.dot(T[m[j],ll].toarray().ravel(), Vd)
                 for i in range(l.size):
-                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, l.size, m.size), i] / den
+                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, l.size, m.size) - 1, i] / den
                     Tn[deutsch[idx,j],english[idx,i]] += val
-                    Dn[indexpack(j,l.size,m.size),i] += val
+                    Dn[indexpack(j,l.size,m.size) - 1,i] += val
                     tNorm[english[idx,i]] += val
-                    dNorm[indexpack(j, l.size, m.size)] += val
+                    dNorm[indexpack(j, l.size, m.size) - 1] += val
         T, D = Tn, Dn
         for enword in range(en_vocab):
             T[:,enword] /= tNorm[enword]   
@@ -163,13 +163,21 @@ def Solve():
     # almost a minute
     enlex = lexicon('data-en')
     # may take several minutes (but has status indicator)
-    (english,deutsch,lmenglish)=europarl()
+   # (english,deutsch,lmenglish)=europarl()
+    #sp.save_npz('ee',english)
+    #sp.save_npz('dd',deutsch)
+    #sp.save_npz('lmeng',lmenglish)
+    
+    english = sp.load_npz('ee.npz')
+    deutsch = sp.load_npz('dd.npz')
+    lmenglish = sp.load_npz('lmeng.npz')
+    
     # may also take several minutes (with status indicator)
-    (N,mmax) = english.shape 
-    mmax = lmenglish.shape[1] - mmax
-    mat=sp.csc_matrix(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax),dtype='int')])]))
-    (LM , LMc) = ibm2_train_lm(mat)
-    sp.save_npz('lmm',LM)
+    #(N,mmax) = english.shape 
+    #mmax = lmenglish.shape[1] - mmax
+    #mat=sp.csc_matrix(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax),dtype='int')])]))
+    #(LM , LMc) = ibm2_train_lm(mat)
+    LM = sp.load_npz('lmm.npz')
     # should be very quick
     (T,D,lom)=ibm2_train(english , deutsch);
     # also very quick
