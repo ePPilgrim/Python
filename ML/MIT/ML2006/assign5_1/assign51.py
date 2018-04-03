@@ -7,8 +7,8 @@ twowordpack = lambda x, y: y * 20001 + x
 numtostr = lambda lex, num: [lex[x - 1] for x in num if x != 0]
 
 def ibm2_train_lm(english):
-    LM = sp.csc_matrix((20001 ** 2,20001))
-    LMc = sp.csc_matrix((20001,20001))
+    LM = sp.csc_matrix((20001 ** 2, 20001))
+    LMc = sp.csc_matrix((20001, 20001))
     
     #We define three additional tokens:
     UNK = 1  # The uknown word (for words unseen previously)
@@ -44,40 +44,42 @@ def ibm2_train(english,deutsch):
     #initialize T and D
     print('Initializing.....')
     T = sp.csc_matrix((de_vocab, en_vocab))
-    D = sp.csc_matrix((dmax * 50 ** 2, emax))
-    lom = np.zeros((dmax,emax))
+    D = sp.csc_matrix(((1 + dmax) * 50 ** 2, emax))
+    lom = np.zeros((dmax + 1,emax + 1))
     for i in range(N):
-        (sink, sink, l) = sp.find(english[i,:])
-        (sink, sink, m) = sp.find(deutsch[i,:])
-        T[m,l] = 1 / m.size
-        D[indexpack(np.arange(m.size) - 1, l.size, m.size) - 1, np.arange(l.size) - 1] = 1 / l.size
-        lom[m.size-1, l.size-1] += 1 
+        (sink, sink, ww) = sp.find(english[i,:])
+        (sink, sink, mm) = sp.find(deutsch[i,:])
+        T[mm,ww] = 1 / mm.size
+        D[indexpack(np.arange(mm.size), ww.size, mm.size) - 1, np.arange(ww.size)] = 1 / ww.size
+        lom[mm.size, ww.size] += 1 
     #[trash,lom] = max(lom,[],2);
     lom = np.argmax(lom,axis = 1)
     print('done.\n');
-    for em_iter_idx in range(50):
-        Tn = sp.csc_matrix((de_vocab, en_vocab));
-        Dn = sp.csc_matrix((dmax * 50 ** 2, emax));
-        tNorm = np.zeros(en_vocab)
-        dNorm = np.zeros(dmax * 50 * 50)
-        for idx in range(N):
-            (sink, sink, l) = sp.find(english[idx,:])
-            (sink, sink, m) = sp.find(deutsch[idx,:])
-            for j in range(m.size):
-                (Jd,Id,Vd) = sp.find(D[indexpack(j,l.size,m.size)-1,:])
-                ll = english[idx,Id].toarray()
-                den = np.dot(T[m[j],ll].toarray().ravel(), Vd)
-                for i in range(l.size):
-                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, l.size, m.size) - 1, i] / den
-                    Tn[deutsch[idx,j],english[idx,i]] += val
-                    Dn[indexpack(j,l.size,m.size) - 1,i] += val
-                    tNorm[english[idx,i]] += val
-                    dNorm[indexpack(j, l.size, m.size) - 1] += val
-        T, D = Tn, Dn
-        for enword in range(en_vocab):
-            T[:,enword] /= tNorm[enword]   
-        [I,J,V] = sp.find(D)
-        D[I,J] /= V / dNorm[I]
+#    for em_iter_idx in range(50):
+#        Tn = sp.csc_matrix((de_vocab, en_vocab));
+#        Dn = sp.csc_matrix(((1 + dmax) * 50 ** 2, emax));
+#        tNorm = np.zeros(en_vocab)
+#        dNorm = np.zeros((1 + dmax) * 50 * 50)
+#        for idx in range(N):
+#            (sink, sink, w) = sp.find(english[idx,:])
+#            (sink, sink, m) = sp.find(deutsch[idx,:])
+#            for j in range(m.size):
+#                (Jd,Id,Vd) = sp.find(D[indexpack(j,w.size,m.size)-1,:])
+#                ll = english[idx,Id].toarray()
+#                den = np.dot(T[m[j],ll].toarray().ravel(), Vd)
+#                for i in range(w.size):
+#                    val = T[deutsch[idx,j],english[idx,i]] * D[indexpack(j, w.size, m.size) - 1, i] / den
+#                    Tn[deutsch[idx,j],english[idx,i]] += val
+#                    Dn[indexpack(j,w.size,m.size) - 1,i] += val
+#                    tNorm[english[idx,i]] += val
+#                    dNorm[indexpack(j, w.size, m.size) - 1] += val
+#        T, D = Tn, Dn
+#        
+#        for enword in range(en_vocab):
+#            if tNorm[enword] != 0:
+#                T[:,enword] /= tNorm[enword]   
+#        [I,J,V] = sp.find(D)
+#        D[I,J] /= V / dNorm[I]
     print('Done with calculation\n')
     return (T, D, lom)
 
@@ -105,29 +107,31 @@ def europarl():
 
 
 def ibm2_beam_decoder(T,D,lom,LM,deutsch):
+    deutsch = sp.find(deutsch)[2]
     beamwidth  = 20
-    m          = len(sp.find(deutsch)[0])
-    fwords     = np.log(T[deutsch[:,np.arange(m)].toarray(), :].max(1).toarray())
+    m          = len(deutsch)
+    fwords     = np.log(T[deutsch, :].max(1).toarray()).ravel()
     hypotheses = [[2,3]]
     covered    = [[0] * m]
     scores     = [0]
     fcosts     = [sum(fwords)]
-    l          = lom[m]
+    ll          = lom[m]
     eps = np.finfo(np.float32).eps
-    for i in range(l):
+    for i1 in range(ll):
         nhypotheses, ncovered, nscores, nfcosts = [], [], [], []
         for hidx in range(len(hypotheses)):
-            for j in [ x for x in range(len(covered[hidx])) if covered[hidx][x] == 0]:
-                for ne in sp.find(T[deutsch[j],:])[1]:
+            for j1 in [ x for x in range(len(covered[hidx])) if covered[hidx][x] == 0]:
+                for ne in sp.find(T[deutsch[j1],:])[1]:
                     if ne != 0:
-                        nc = covered[hidx]
-                        nc[j] += 1
-                        ns = scores[hidx] \
-                        + np.log(eps + T[deutsch[j],ne]) \
-                        + np.log(eps + D[indexpack(j,l,m),i]) \
-                        + np.log(eps + LM[twowordpack(hypotheses[hidx][i],hypotheses[hidx][i+1]), ne])
+                        nc = [x for x in covered[hidx]]
+                        nc[j1] += 1
+                        ns = np.array(scores[hidx]) \
+                        + np.log(eps + T[deutsch[j1],ne]) \
+                        + np.log(eps + D[indexpack(j1,ll,m),i1]) \
+                        + np.log(eps + LM[twowordpack(hypotheses[hidx][i1],hypotheses[hidx][i1+1]), ne])
                         nf = ns + np.dot(fwords, 1 - np.array(nc))
-                        nhypotheses.append(hypotheses[hidx].append(ne));
+                        hypotheses[hidx].append(ne)
+                        nhypotheses.append([x for x in hypotheses[hidx]])
                         ncovered.append(nc)
                         nscores.append(ns)
                         nfcosts.append(nf)
@@ -138,7 +142,7 @@ def ibm2_beam_decoder(T,D,lom,LM,deutsch):
         scores     = [nscores[i] for i in beam]
         fcosts     = [nfcosts[i] for i in beam]
         scores + fcosts
-    return hypotheses[1]
+    return hypotheses[0]
 
 
 def klaus():
@@ -146,9 +150,9 @@ def klaus():
     de_file  = open('filt-klaus','r');
     delens = np.array([int(x) for x in dec_file.read().split()])
     N = len(delens)
-    klausde = sp.csc_matrix((N,max(delens)))
+    klausde = sp.csc_matrix((N,max(delens)),dtype = 'int')
     for i in range(N):
-        klausde[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.read(delens[i]).split()])
+        klausde[i,np.arange(delens[i])] = np.array([int(x) for x in de_file.readline().split()])
     return klausde       
 
 
@@ -174,18 +178,24 @@ def Solve():
     
     # may also take several minutes (with status indicator)
     #(N,mmax) = english.shape 
-    #mmax = lmenglish.shape[1] - mmax
+    #mmax = lmenglish.shape[1] - mmaxss
     #mat=sp.csc_matrix(sp.vstack([lmenglish, sp.hstack([english, sp.csc_matrix((N, mmax),dtype='int')])]))
     #(LM , LMc) = ibm2_train_lm(mat)
     LM = sp.load_npz('lmm.npz')
     # should be very quick
     (T,D,lom)=ibm2_train(english , deutsch);
+#    sp.save_npz('ttt',T)
+#    sp.save_npz('ddd',D)
+    
+    T = sp.load_npz('ttt.npz')
+    D = sp.load_npz('ddd.npz')
+    
     # also very quick
     germans = klaus();
     for i in range(germans.shape[0]):
         german = germans[i,:]
-        englisch = ibm2_beam_decoder(T,D,lom,LM,german)
-        numtostr(delex,german)
-        numtostr(enlex,englisch)
+        eng = ibm2_beam_decoder(T,D,lom,LM,german)
+        print(numtostr(delex,german.toarray().ravel()))
+        print(numtostr(enlex,eng))
 
 Solve()
