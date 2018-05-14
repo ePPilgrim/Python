@@ -33,15 +33,17 @@ def main(project_dir):
     logger = logging.getLogger(__name__)
     logger.info('getting raw data')
     # urls
-    train_url = 'https://www.kaggle.com/c/house-prices-advanced-regression-techniques/download/train.csv'
-    test_url = 'https://www.kaggle.com/c/house-prices-advanced-regression-techniques/download/test.csv'
-    desc_url = 'https://www.kaggle.com/c/house-prices-advanced-regression-techniques/download/data_description.txt'
+    train_url = 'https://www.kaggle.com/c/5407/download/train.csv'
+    test_url = 'https://www.kaggle.com/c/5407/download/test.csv'
+    desc_url = 'https://www.kaggle.com/c/5407/download/data_description.txt'
 
     # file paths
     raw_data_path = os.path.join(project_dir,'data','raw')
     train_data_path = os.path.join(raw_data_path, 'train.csv')
     test_data_path = os.path.join(raw_data_path, 'test.csv')
     desc_data_path = os.path.join(project_dir,'docs', 'data_description.txt')
+    
+    print(raw_data_path)
 
     # extract data
     extract_data(train_url,train_data_path)
