@@ -1,0 +1,2 @@
+vv=df.select_dtypes(include = ['object'])
+num = df.select_dtypes(exclude = ['object'])
