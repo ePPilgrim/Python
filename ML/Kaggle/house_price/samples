@@ -1,2 +1,11 @@
 vv=df.select_dtypes(include = ['object'])
 num = df.select_dtypes(exclude = ['object'])
+
+---Histogram
+nandf = df[df['LotFrontage'].notnull()]
+nandf['YearBuilt'].hist(bins = 80)
+plt.show()
+
+vv=nandf.pivot_table(values = 'LotFrontage', index = ['YearBuilt'], aggfunc = np.size)
+ii = vv[vv.index < 1990]
+vv = ii[ii.index > 1932]
