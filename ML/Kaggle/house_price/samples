@@ -9,3 +9,10 @@ plt.show()
 vv=nandf.pivot_table(values = 'LotFrontage', index = ['YearBuilt'], aggfunc = np.size)
 ii = vv[vv.index < 1990]
 vv = ii[ii.index > 1932]
+
+pvt = validdf.pivot_table(values = 'LotFrontage', index = catclass, aggfunc = [np.std, np.mean, np.size, np.min, np.max])
+pvt['RelStd', 'LotFrontage'] = (pvt['std','LotFrontage'] / pvt['mean','LotFrontage']) * 100
+pvt=pvt[pvt.notnull().all(1)]
+s = [tuple(x) for x in nandf[catclass].values]
+yy = pvt.loc[s]
+yy.index = nandf.index
