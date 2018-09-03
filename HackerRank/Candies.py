@@ -6,20 +6,18 @@ def candies(n, arr):
     I0 = 1
     for i in range(1,n + 1):
         w[arr[i]].append(i)
-        if I0 > arr[i]: I0 = arr[i]
-    for i in range(I0, W0):
-        if len(w[i]) != 0: w[i].append(n+1)     
-    ans = [[1] for i in range(n)]
+        if I0 > arr[i]: I0 = arr[i]    
+    ans = [1]*(n + 2)
     I0 += 1
     for i in range(I0,len(w)):
-        if len(w[i])!= 0:
-            i1 = w[x][0]
-            for j in range(1, len(w[i])):
-                if w[i][j] == w[i][j-1] + 1: 
-                    continue
-                i2 = w[i][j] - 1
+            for j in w[i]:
+                if arr[j-1] < arr[j] : 
+                    ans[j] = 1 + ans[j-1]
+                if arr[j+1] < arr[j]:
+                    ans[j] = max(ans[j], ans[j+1] + 1)
+    return sum(ans[1:n+1])
                 
             
                 
-                
-            
+ans = candies(10,[2,4,2,6,1,7,8,9,2,1])              
+print(ans)
