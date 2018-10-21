@@ -100,9 +100,6 @@ def ResolveNaN(df):
     
     df = df.drop(labels = oldflds,axis = 1)
     df[newdf.columns] = newdf
-################################################Convert int and Objects type fields into float64 ###############
-    df = pd.get_dummies(df).astype('float64')
-    df.loc[:,'Id'] = df['Id'].astype('int32')
     return df
 ####################################################################################################################
 def FormatAndSave(df):
@@ -124,3 +121,5 @@ def FormatAndSave(df):
 if __name__ == '__main__':
     df = pd.DataFrame()
     df = df.pipe(CreateDataFrame).pipe(ResolveNaN).pipe(FormatAndSave)
+    lx = 0< df < 1
+    df[lx].head(100)
