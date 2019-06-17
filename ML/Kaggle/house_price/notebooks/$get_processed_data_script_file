@@ -1,125 +1,98 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import os
+import pldd_transformation as pt
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import RobustScaler
+from sklearn.preprocessing.data import QuantileTransformer
 
-def CreateDataFrame(df):
-    project_dir = 'C:\\Users\\PLDD\\python\\Python\\ML\\Kaggle\\house_price'
-    raw_path = os.path.join(project_dir,'data','raw')
+def get_raw_data(raw_path):
     train_path = os.path.join(raw_path, 'train.csv')
     test_path = os.path.join(raw_path, 'test.csv')
-    train_df = pd.read_csv(train_path)
-    test_df = pd.read_csv(test_path)
-    test_df['SalePrice'] = 0.0
-    df = train_df.append(test_df)
-    df.index = list(range(train_df.index.size + test_df.index.size))
-################# 2916 out of 2919 Utilities are AllPub so i think it should be droped off
-    df = df.drop('Utilities', axis = 1)
-############### Handle basment information - replace nan with no_basment or zero quatity
-    catbsmflds = ['BsmtQual', 'BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2']
-    ambsmflds = ['BsmtFinSF1','BsmtFinSF2','TotalBsmtSF','BsmtUnfSF','BsmtFullBath','BsmtHalfBath']
-    lx = df[catbsmflds].isnull().all(axis = 1) 
-    lx = lx & (df['TotalBsmtSF']==0.0)
-    df.loc[lx,catbsmflds] = 'NoBsm'
-    df.loc[lx,ambsmflds] = 0.0
-############### Handle garage information - replace nan with no_garage or zero quatity    
-    catflds = ['GarageType', 'GarageFinish', 'GarageQual','GarageCond']
-    yearfld = 'GarageYrBlt'
-    amtfld = 'GarageArea'
-    lx = (df[catflds].isnull().all(axis = 1)) & (df[amtfld]==0.0)
-    df.loc[lx,catflds] = 'NoGarage'
-    df.loc[lx,yearfld] = 0
-############### Handle Pool information - replace nan with no_pool or zero quatity    
-    catfld = 'PoolQC'
-    amtfld = 'PoolArea'
-    lx = (df[catfld].isnull())& (df[amtfld]==0.0)
-    df.loc[lx,catfld] = 'NoPool'
-############### Handle FireplaceQu nan - it is only no fireplace #################################
-    fld = 'FireplaceQu'
-    lx = df['Fireplaces'] == 0
-    df.loc[lx,fld] = 'NoFireplace'
-############### Handle 'Fence', 'MiscFeature' - just replace it with NoFence or feature###########    
-    flds =['Fence', 'MiscFeature']
-    df.loc[:,flds] = df[flds].fillna(value = 'Noooo')
-    return df
-##################################################################################################################
-def ResolveNaN(df):
-    oldflds = []
-    newdf = pd.DataFrame()
-######################## 1) MSZoning - 'RL', 'RM', 'C (all)', 'FV', 'RH', nan ################################
-    colname = 'MSZoning'
-    oldflds.append(colname)
-    #### with Mitchel neighbor it is highly likely that zoning is 'RL' (grouping by Neighbors + BuiltYear)
-    lx=(df[colname].isnull()) & (df['Neighborhood'] == 'Mitchel')  
-    df.loc[lx,colname] = 'RL'
-    ### group by IDOTRR neighbor
-    invalidlx = df[colname].isnull() 
-    idotrrlx = df['Neighborhood'] == 'IDOTRR'
+    train = pd.read_csv(train_path)
+    test = pd.read_csv(test_path)
+    test['SalePrice'] = 0.0
+    train['Id'] = 0
+    test['Id'] = 1
+    return train.append(test)
 
-    tempdf = pd.get_dummies(df[colname],prefix = colname).astype(float)
-    tempdf.loc[invalidlx,:] = tempdf[idotrrlx].sum().values / tempdf[idotrrlx].sum().sum()
-    newdf[tempdf.columns] = tempdf
-######################## 2) LotFrontage - float value, nan ################################ 
-    #Exclude this field from ML - base on the idea that Lot Area is more important parameter than LotFrontage
-    colnames = ['LotFrontage','GarageCars']
-    oldflds += colnames
-######################## 3) Alley  - nan, 'Grvl', 'Pave' ################################ 
-    colname = 'Alley'
-    oldflds.append(colname)
-    tempdf = pd.get_dummies(df[colname],prefix = colname,dummy_na = True).astype(float)
-    newdf[tempdf.columns] = tempdf
-######################## 4) 'Exterior1st', 'Exterior2nd','MasVnrType','Electrical','KitchenQual'#############
-########################'BsmtQual', 'BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2'##################
-######################## 'Functional','GarageType', 'GarageFinish', 'GarageQual','GarageCond'################
-######################## 'PoolQC','SaleType'#################################################################   
-    colnames = ['Exterior1st','Exterior2nd','MasVnrType','Electrical','KitchenQual',
-                'BsmtQual','BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2',
-               'Functional','GarageType', 'GarageFinish', 'GarageQual','GarageCond',
-               'PoolQC','SaleType']
-    for colname in colnames:
-        lx = df[colname].isnull()
-        oldflds.append(colname)
-        tempdf = pd.get_dummies(df[colname],prefix = colname).astype(float)
-        tempdf.loc[lx,:] = tempdf[~lx].sum().values / tempdf[~lx].sum().sum()
-        newdf[tempdf.columns] = tempdf
-####################### 5) Mean apprx - 'MasVnrArea','BsmtFullBath','BsmtHalfBath'###########################
-    colnames = ['MasVnrArea','BsmtFullBath','BsmtHalfBath']
-    for colname in colnames:
-        lx = df[colname].isnull()
-        df.loc[lx,colname] = df[~lx][colname].mean()
+def get_processed_data(df):
+    tr1 =pt.make_pipe_decorator(pt.Transformer1('GarageArea',0,{0 : ['GarageYrBlt','GarageCars'],
+                                              'None' : ['GarageType','GarageFinish','GarageQual','GarageCond']}),
+                   pt.Transformer2(['GarageCars'],['GarageArea']),
+                   pt.Transformer3(['YearRemodAdd'],['GarageYrBlt']),
+                   pt.Transformer4(['BuiltAge','RenowateAge','GarageAge'],
+                                ['YrSold']*3,['YearBuilt','YearRemodAdd','GarageYrBlt'],['MoSold']),
+                   pt.Transformer5(['GarageFinish','GarageQual','GarageCond']),
+                   pt.Transformer2(aMeanFlds = ['GarageFinish', 'GarageQual','GarageCond']),
+                   pt.Transformer7(['GarageType']))
 
-####################### 6) Median apprx - 'BsmtFinSF1','BsmtFinSF2','TotalBsmtSF','BsmtUnfSF','GarageArea'###
-    colnames = ['BsmtFinSF1','BsmtFinSF2','TotalBsmtSF','BsmtUnfSF','GarageArea']
-    for colname in colnames:
-        lx = df[colname].isnull()
-        df.loc[lx,colname] = df[~lx][colname].median()
-##################### 7) 'GarageYrBlt'####################################################################### 
-    colname = 'GarageYrBlt'
-    lx = df[colname].isnull()
-    df.loc[lx,colname] = df[lx]['YearBuilt']
-    
-    df = df.drop(labels = oldflds,axis = 1)
-    df[newdf.columns] = newdf
-    return df
-####################################################################################################################
-def FormatAndSave(df):
-    dff = df.copy()
-    categorical_flds = dff.columns[dff.dtypes == 'category'].values
-    dff = pd.get_dummies(dff, columns = categorical_flds)
-    
-    processed_data_path = os.path.join(os.path.pardir,'data','processed')
-    write_train_path = os.path.join(processed_data_path, 'train.csv')
-    write_test_path = os.path.join(processed_data_path, 'test.csv')
+    tr2 = pt.make_pipe_decorator(pt.Transformer1('TotalBsmtSF', 0,{0 : ['BsmtFinSF1','BsmtFinSF2','BsmtUnfSF','TotalBsmtSF',
+                                                        'BsmtFullBath','BsmtHalfBath'],
+                                                'None' : ['BsmtQual','BsmtCond','BsmtExposure',
+                                                          'BsmtFinType1','BsmtFinType2']}),
+                    pt.Transformer1('MasVnrArea',0,{'None' : ['MasVnrType']}),
+                    pt.Transformer1('MasVnrType','None',{0 : ['MasVnrArea']}),
+                    pt.Transformer8(['MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2'],['MasVnrType', 'BsmtFinType1','BsmtFinType2']),
+                    pt.Transformer9('TotalBsmtSF',['BsmtFinSF1', 'BsmtFinSF2'], [1.0,1.0]),
+                    pt.Transformer9('BsmtUnfSF',['TotalBsmtSF','BsmtFinSF1', 'BsmtFinSF2'], [1.0,-1.0,-1.0]),
+                    pt.Transformer2(aMeanFlds = ['BsmtFullBath','BsmtHalfBath']),
+                    pt.Transformer5(['BsmtQual','BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinType2']),
+                    pt.Transformer2(aMeanFlds = ['BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2']),
+                    pt.Transformer7(['MasVnrType'])
+                   )
+
+    tr3 = pt.make_pipe_decorator(pt.FillNa(['FireplaceQu','Alley','PoolQC','Fence','MiscFeature']),pt.DropFields(['Utilities']),
+                   pt.Transformer5(['FireplaceQu','Alley','PoolQC']),TurnObjIntoNum())
+
+    #4. ['MSZoning','Neighborhood','LotFrontage','LotConfig','LotArea']
+    param_grid = {'alpha': [0.2, 0.1, 1e-2, 1e-3,1e-4]}
+    solver = GridSearchCV(Lasso(max_iter = 5000,tol = 0.0001), cv=5,param_grid=param_grid)
+    tr4 = pt.make_pipe_decorator(pt.Transformer6(solver,'LotFrontage',['Neighborhood','LotFrontage','LotConfig','LotArea'],
+                                       RobustScaler(),
+                                       QuantileTransformer()),
+                    pt.Transformer10(),pt.TurnObjIntoNum())
+
+    #5. ['ExterQual','ExterCond','HeatingQC','LandSlope','LotShape','PavedDrive','Street','CentralAir','KitchenQual']
+    tr5 = pt.make_pipe_decorator(pt.Transformer5(['ExterQual','ExterCond','HeatingQC','LandSlope','LotShape',
+                                 'PavedDrive','Street','CentralAir','KitchenQual']),
+                    pt.Transformer2(aMeanFlds = ['KitchenQual']))
+
+    #6. ['Exterior1st','Exterior2nd','Electrical','SaleType','Functional']
+    tr6 = pt.make_pipe_decorator(pt.Transformer7(['Exterior1st','Exterior2nd','Electrical','SaleType','Functional']))
+
+    #the rest fields
+    tr7 = pt.make_pipe_decorator(pt.TurnObjIntoNum())
+
+    trs = ColumnTransformer([("tr1", tr1, ['GarageType','GarageYrBlt','GarageFinish','GarageCars','GarageArea','GarageQual',
+                                      'GarageCond','YearBuilt','YearRemodAdd','MoSold','YrSold']),
+                        ("tr2",tr2,['BsmtQual','BsmtCond','BsmtExposure','BsmtFinType1','BsmtFinSF1','BsmtFinType2',
+                                    'BsmtFinSF2','BsmtUnfSF','TotalBsmtSF','BsmtFullBath','BsmtHalfBath','MasVnrArea',
+                                    'MasVnrType']),
+                        ("tr3",tr3,['FireplaceQu','Alley','PoolQC','Fence','MiscFeature','Utilities']),
+                        ("tr4",tr4,['MSZoning','Neighborhood','LotFrontage','LotConfig','LotArea']),
+                        ("tr5",tr5,['ExterQual','ExterCond','HeatingQC','LandSlope','LotShape',
+                                    'PavedDrive','Street','CentralAir','KitchenQual']),
+                        ("tr6",tr6,['Exterior1st','Exterior2nd','Electrical','SaleType','Functional'])
+                        ],remainder = tr7)
+    tr = make_pipeline(TreatOutliers(),trs)
+    X = tr.fit_transform(df)
+    column_names = [re.compile(r'^\w*__').sub('',s) for s in trs.get_feature_names()]
+    return pd.DataFrame(data = X, columns = column_names).astype('float')
+
+def FormatAndSave(raw_path,processed_path):
+    df = get_raw_data(raw_path)
+    df = get_processed_data(df)   
+    write_train_path = os.path.join(processed_path, 'train.csv')
+    write_test_path = os.path.join(processed_path, 'test.csv')
     
     # train data
-    dff.loc[dff.SalePrice != 0].to_csv(write_train_path) 
+    df.loc[df.Id < 1].to_csv(write_train_path) 
     # test data
-    columns = [column for column in dff.columns if column != 'SalePrice']
-    dff.loc[dff.SalePrice == 0, columns].to_csv(write_test_path)
+    columns = [column for column in df.columns if column != 'SalePrice']
+    df.loc[df > 0, columns].to_csv(write_test_path)
     return df
 
 if __name__ == '__main__':
-    df = pd.DataFrame()
-    df = df.pipe(CreateDataFrame).pipe(ResolveNaN).pipe(FormatAndSave)
-    lx = 0< df < 1
-    df[lx].head(100)
+    raw_path = os.path.join(os.path.pardir, os.path.pardir,'data','raw')
+    processed_path = os.path.join(os.path.pardir, os.path.pardir,'data','processed')
+    FormatAndSave(raw_path, processed_path)
+    print("Get_processed_data")
