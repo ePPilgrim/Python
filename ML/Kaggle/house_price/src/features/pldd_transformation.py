@@ -122,11 +122,12 @@ class Transformer6(BaseTransformer):
             y = df[~lx][self.yfld].values.reshape(-1, 1)
             self.yscaler = self.yscaler.fit(y)
             x = df.drop(self.yfld, axis=1).values.astype('float')
+            x = self.xscaler.fit_transform(x)
             x_train = x[~lx]
             x_test = x[lx]
-            self.xscaler = self.xscaler.fit(x_train)
-            x_train = self.xscaler.transform(x_train)
-            x_test = self.xscaler.transform(x_test)
+            #self.xscaler = self.xscaler.fit(x_train)
+            #x_train = self.xscaler.transform(x_train)
+            #x_test = self.xscaler.transform(x_test)
             y = self.yscaler.transform(y)
             self.solver.fit(x_train, y)
             y = self.solver.predict(x_test).astype('float').reshape(-1, 1)
@@ -198,7 +199,7 @@ class TreatOutliers(BaseTransformer):  # only for outliers
     def transform(self, X):
         lx = (X['SalePrice'] <= 200000) & (X['GrLivArea'] >= 4000)
         lx |= X['LotFrontage'] > 300
-        lx &= X['Id'] == 0  # zero mean training set
+        lx &= X['SalePrice'] > 1  # training set
         return X[~lx]
 
 

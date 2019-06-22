@@ -16,8 +16,6 @@ def get_raw_data(raw_path):
     train = pd.read_csv(train_path)
     test = pd.read_csv(test_path)
     test['SalePrice'] = 0.0
-    train['Id'] = 0
-    test['Id'] = 1
     return train.append(test)
 
 
@@ -60,7 +58,7 @@ def get_processed_data(df):
     tr4 = pt.make_pipe_decorator(
         pt.Transformer6(solver, 'LotFrontage', ['Neighborhood', 'LotFrontage', 'LotConfig', 'LotArea'],
                         RobustScaler(),
-                        QuantileTransformer()),
+                        QuantileTransformer(output_distribution='normal')),
         pt.Transformer10(), pt.TurnObjIntoNum())
 
     # 5. ['ExterQual','ExterCond','HeatingQC','LandSlope','LotShape','PavedDrive','Street','CentralAir','KitchenQual']
@@ -90,7 +88,9 @@ def get_processed_data(df):
     tr = make_pipeline(pt.TreatOutliers(), trs)
     X = tr.fit_transform(df)
     column_names = [re.compile(r'^\w*__').sub('', s) for s in trs.get_feature_names()]
-    return pd.DataFrame(data=X, columns=column_names).astype('float')
+    df = pd.DataFrame(data=X, columns=column_names).astype('float')
+    df.Id = df.Id.astype('int')
+    return df
 
 
 def FormatAndSave(raw_path, processed_path):
@@ -100,10 +100,10 @@ def FormatAndSave(raw_path, processed_path):
     write_test_path = os.path.join(processed_path, 'test.csv')
 
     # train data
-    df.loc[df.Id < 1].to_csv(write_train_path)
+    df.loc[df.SalePrice > 1.0].to_csv(write_train_path)
     # test data
     columns = [column for column in df.columns if column != 'SalePrice']
-    df.loc[df.Id > 0, columns].to_csv(write_test_path)
+    df.loc[df.SalePrice < 1.0, columns].to_csv(write_test_path)
     return df
 
 
