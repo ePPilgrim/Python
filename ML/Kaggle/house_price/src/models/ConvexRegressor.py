@@ -9,7 +9,7 @@ class ConvexRegressor(RegressorMixin):
         self.ests = ests
         self.convparams = convparams
         if convparams is None:
-            val = 1.0 / len(self.estimators)
+            val = 1.0 / len(self.ests)
             self.convparams = {x.__class__.__name__: val for x in self.ests}
         self.__estrep__ = {x.__class__.__name__: x for x in ests}
 
