@@ -150,12 +150,12 @@ class DataFramePreparation(object):
 			if extendLen <= 0:
 				origFilenames = origFilenames[:maxCnt]
 				types = [0] * maxCnt
-			for i in range(extendLen):
-				origFilenames.append(augFilenames[i])
-				_, filename = os.path.split(augFilenames[i])
+			for j in range(extendLen):
+				origFilenames.append(augFilenames[j])
+				_, filename = os.path.split(augFilenames[j])
 				filename = os.path.splitext(filename)[0]
 				types.append(int(filename.split('_')[2]))
 			dictpd['filename'] += origFilenames
-			dictpd['class'] += [int(i)] * len(types) 
+			dictpd['class'] += [i] * len(types) 
 			dictpd['type'] += types
 		return pd.DataFrame(dictpd)

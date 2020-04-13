@@ -10,29 +10,29 @@ import imgprep as pr
 import dataprep as dp
 
 @click.command()
-@click.argument('input_filepath', type=click.Path(exists=True))
-@click.argument('output_filepath', type=click.Path())
-@click.argument('traincnt', default = 2056)
-@click.argument('testcnt', default = 1024)
-def main(input_filepath, output_filepath, traincnt, testcnt):
+@click.argument('input_projectdir', type=click.Path(exists=True))
+@click.option('--traincnt', default = 2048)
+@click.option('--testcnt', default = 1024)
+def main(input_projectdir, traincnt, testcnt):
     if traincnt == 0 or testcnt == 0:
         return
 
-    dfFilePath = os.environ.get("REF_RAW_TRAIN_DF")
+    dfFilePath = os.path.join(input_projectdir, os.environ.get("REF_RAW_TRAIN_DF"))
     idColName = os.environ.get("ID_COLUMN_NAME")
     catColName = os.environ.get("CATEGORY_COLUMN_NAME")
 
-    srcDir = os.path.join(input_filepath,os.environ.get("RAW_TRAIN_DIR"))
-    destTestOrigDir = os.path.join(output_filepath, os.environ.get("PROC_TEST_ORIG_DIR"))
-    destTestAugmDir = os.path.join(output_filepath, os.environ.get("PROC_TEST_AUG_DIR"))
-    destTrainOrigDir = os.path.join(output_filepath, os.environ.get("PROC_TRAIN_ORIG_DIR"))
-    destTrainAugmDir = os.path.join(output_filepath, os.environ.get("PROC_TRAIN_AUG_DIR"))
+    srcDir = os.path.join(input_projectdir, os.path.join(input_filepath,os.environ.get("RAW_TRAIN_DIR")))
+    destTestOrigDir = os.path.join(input_projectdir, os.environ.get("PROC_TEST_ORIG_DIR"))
+    destTestAugmDir = os.path.join(input_projectdir, os.environ.get("PROC_TEST_AUG_DIR"))
+    destTrainOrigDir = os.path.join(input_projectdir, os.environ.get("PROC_TRAIN_ORIG_DIR"))
+    destTrainAugmDir = os.path.join(input_projectdir, os.environ.get("PROC_TRAIN_AUG_DIR"))
 
     imgPrep = pr.PreprocessImage(cropTol = 7, sigma = 32)
     imgAugm = pr.Augmentation(sigma = 16)
     dataProc = dp.ImageDataPreparation(imgPrep, imgAugm, dfFilePath, idColName, catColName,
                                  srcDir, destTestOrigDir, destTestAugmDir, destTrainOrigDir, destTrainAugmDir)
-    dataProc(split = 0.1, trCnt = traincnt, tsCnt = testcnt, rewrite = True)
+    
+    #dataProc(split = 0.1, trCnt = traincnt, tsCnt = testcnt, rewrite = True)
 
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')

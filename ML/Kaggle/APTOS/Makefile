@@ -34,10 +34,10 @@ requirements: test_environment
 
 ## Make Dataset
 dataimage: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed --traincnt=$(trcnt) --testcnt=$(tscnt)
+	$(PYTHON_INTERPRETER) src/data/make_dataset.py ./ --traincnt=$(trcnt) --testcnt=$(tscnt)
 
 datadf:
-	$(PYTHON_INTERPRETER) src/data/make_dataframe.py data/raw data/processed --traincnt=$(trcnt) --testcnt=$(tscnt)
+	$(PYTHON_INTERPRETER) src/data/make_dataframe.py ./ --traincnt=$(trcnt) --testcnt=$(tscnt)
 
 ## Delete all compiled Python files
 clean:
