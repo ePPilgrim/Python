@@ -21,7 +21,7 @@ def main(input_projectdir, traincnt, testcnt):
     idColName = os.environ.get("ID_COLUMN_NAME")
     catColName = os.environ.get("CATEGORY_COLUMN_NAME")
 
-    srcDir = os.path.join(input_projectdir, os.path.join(input_filepath,os.environ.get("RAW_TRAIN_DIR")))
+    srcDir = os.path.join(input_projectdir,os.environ.get("RAW_TRAIN_DIR"))
     destTestOrigDir = os.path.join(input_projectdir, os.environ.get("PROC_TEST_ORIG_DIR"))
     destTestAugmDir = os.path.join(input_projectdir, os.environ.get("PROC_TEST_AUG_DIR"))
     destTrainOrigDir = os.path.join(input_projectdir, os.environ.get("PROC_TRAIN_ORIG_DIR"))
@@ -32,7 +32,7 @@ def main(input_projectdir, traincnt, testcnt):
     dataProc = dp.ImageDataPreparation(imgPrep, imgAugm, dfFilePath, idColName, catColName,
                                  srcDir, destTestOrigDir, destTestAugmDir, destTrainOrigDir, destTrainAugmDir)
     
-    #dataProc(split = 0.1, trCnt = traincnt, tsCnt = testcnt, rewrite = True)
+    dataProc(split = 0.1, trCnt = traincnt, tsCnt = testcnt, rewrite = True)
 
     logger = logging.getLogger(__name__)
     logger.info('making final data set from raw data')
