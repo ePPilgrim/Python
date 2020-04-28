@@ -29,7 +29,7 @@ class ImageDataPreparation(object):
 		self.ConfigurationValid = self.ValidateArguments()
 
 	def ValidateArguments(self):
-		if not self.ImgPrep or not ImgAugm:
+		if self.ImgPrep is None or self.ImgAugm is None:
 			return False
 		if not ((self.Id in self.Table.columns) and (self.Cat in self.Table.columns)):
 			return False
