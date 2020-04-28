@@ -5,6 +5,6 @@
     "\\src\\data",
     "\\src\\visualization"
   ],
-  "SelectedNode": "\\src\\data\\imggen.py",
+  "SelectedNode": "\\src\\data\\make_dataset.py",
   "PreviewInSolutionExplorer": false
 }
