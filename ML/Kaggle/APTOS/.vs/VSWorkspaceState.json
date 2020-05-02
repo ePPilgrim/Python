@@ -2,9 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\src",
-    "\\src\\data",
-    "\\src\\visualization"
+    "\\src\\models"
   ],
-  "SelectedNode": "\\src\\data\\make_dataset.py",
+  "SelectedNode": "\\src\\models\\basemodel.py",
   "PreviewInSolutionExplorer": false
 }
