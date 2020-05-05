@@ -1,6 +1,6 @@
 import cv2
 import os
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import imgtrans as tr
 
 class ImagePreprocessing(object):
