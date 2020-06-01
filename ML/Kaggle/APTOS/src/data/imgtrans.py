@@ -5,11 +5,16 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
+
 class Transformation(object):
     def __init__(self):
         pass
     def __call__(self,image):
         return image
+    def _clip_(self,img):
+        img -= np.min(img)
+        img = (img * 255.0) / np.max(img) 
+        return img
 
 class Resize(Transformation):
     '''
@@ -51,14 +56,35 @@ class Cropp(Transformation):
         return tf.stack(newImage,axis = 2).numpy()
     
 class Sharppen(Transformation):
-    def __init__(self, sigma = None):
+    def __init__(self, sigma = (16, 64), alpha = (0.1, 0.99)):
         super().__init__()
         self.sigma = sigma
+        self.alpha = alpha
+    def __call__(self, image = None):
+        if image is None or self.sigma is None or self.alpha is None:
+            return super().__call__(image)
+        alpha = self.alpha
+        sigma = self.sigma
+        if isinstance(alpha,tuple):
+            alpha = alpha[0] + np.random.rand() * (alpha[-1] - alpha[0])
+        if isinstance(sigma,tuple):
+            sigma = sigma[0] + np.random.rand() * (sigma[-1] - sigma[0])   
+        img = cv2.addWeighted ( image,(1.0 + alpha), cv2.GaussianBlur( image, (0,0) , sigma) ,-alpha, 0)
+        return self._clip_(img)
+
+class Blur(Transformation):
+    def __init__(self, sigma = (0.5, 4.0)):
+        super().__init__()
+        self.sigma = sigma
+        
     def __call__(self, image = None):
         if image is None or self.sigma is None:
             return super().__call__(image)
-        img = cv2.addWeighted ( image,4, cv2.GaussianBlur( image, (0,0) , self.sigma) ,-4 ,128)
-        return img
+        sigma = self.sigma
+        if isinstance(self.sigma,tuple):
+            sigma = self.sigma[0] + np.random.rand() * (self.sigma[-1] - self.sigma[0])   
+        img = cv2.GaussianBlur( image, (0,0) , sigma)      
+        return self._clip_(img)
     
 class CircleMask(Transformation):
     def __init__(self):
@@ -84,7 +110,7 @@ class AddGauseNoise(Transformation):
             return super().__call__(image)
         sigmav = np.random.choice(self.SupperSigma, 3)
         noise = np.random.normal(0,sigmav,image.shape)
-        return np.clip(noise + image,0.,255.)
+        return self._clip_(noise + image)
 
 class RandomVisualEffect(Transformation):
     def __init__(self):
@@ -97,7 +123,6 @@ class RandomVisualEffect(Transformation):
         rix = np.random.choice(3,1)[0]
         image = cv2.rotate(image,self.rot[rix])
         image = tf.image.adjust_contrast(image, 1.0 + 2.0 * np.random.random())
-        image = tf.image.random_hue(image,0.5)
         image = tf.image.random_flip_left_right(image)
         image = tf.image.random_flip_up_down(image)
         return image.numpy()
