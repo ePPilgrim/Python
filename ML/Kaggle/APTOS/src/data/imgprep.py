@@ -1,6 +1,7 @@
 import cv2
 import os
 import matplotlib.pyplot as plt
+import numpy as np
 import imgtrans as tr
 
 class ImagePreprocessing(object):
@@ -31,14 +32,18 @@ class ImagePreprocessing(object):
             return cv2.imread(path)
         return None
 
-def PreprocessImage(cropTol = 7, sigma = 32):
-    cm = tr.CircleMask()
+def PreprocessImage(cropTol = 7):
     crop = tr.Cropp(cropTol)
     resize = tr.Resize((224,224))
-    sharp = tr.Sharppen(sigma)
-    return ImagePreprocessing(tr.Pipe([cm, crop, sharp, resize]))
+    return ImagePreprocessing(tr.Pipe([crop, resize]))
 
 def Augmentation(sigma = 16):
+    effect = tr.Transformation()
+    if np.random.randint(2) == 0:
+        effect = tr.Sharppen()
+    else:
+        effect = tf.Blur()
+        
     visEffects = tr.RandomVisualEffect()
     gaussNoise = tr.AddGauseNoise(sigma)
     return ImagePreprocessing(tr.Pipe([visEffects,gaussNoise]))

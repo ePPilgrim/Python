@@ -8,7 +8,8 @@ class ImageDataPreparation(object):
 			  dataFramePath, IdCol, CatCol, 
 			  SrcDir,
 			  distTestOrigDir, distTestAugmDir, 
-			  distTrainOrigDir, distTrainAugmDir):
+			  distTrainOrigDir, distTrainAugmDir,
+			  filterOutCat = None):
 		self.ConfigurationValid = True
 		self.Table = None
 		if not os.path.isfile(dataFramePath):
@@ -27,6 +28,7 @@ class ImageDataPreparation(object):
 		self.DistTrainOrigDir = distTrainOrigDir
 		self.DistTrainAugmDir = distTrainAugmDir
 		self.ConfigurationValid = self.ValidateArguments()
+		self.FilterOutCat = filterOutCat
 
 	def ValidateArguments(self):
 		if self.ImgPrep is None or self.ImgAugm is None:
@@ -48,6 +50,9 @@ class ImageDataPreparation(object):
 			return False
 		catv = self.Table[self.Cat].unique()
 		catv.sort()
+		if self.FilterOutCat is not None:
+			lx = [x not in self.FilterOutCat for x in catv]
+			catv = catv[lx]
 		for ik in catv:
 			trainv, testv = self._get_single_train_test(ik,split)			
 			path = os.path.join(self.DistTrainOrigDir,str(ik))
