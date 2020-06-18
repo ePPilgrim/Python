@@ -9,6 +9,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import concatenate
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import DepthwiseConv2D
+from tensorflow import function 
 
 
 class DepthWiseConvBatchNorm(layers.Layer):
@@ -21,7 +22,8 @@ class DepthWiseConvBatchNorm(layers.Layer):
         self.Layer11 = Conv2D(filters,(1,1),strides,padding)
         self.Layer12 = BatchNormalization()
         self.Layer13 = ReLU()
-        
+
+    @function   
     def call(self, inputs, training = None):
         x = self.Layer1(inputs)
         x = self.Layer2(x,training = training)
@@ -38,7 +40,8 @@ class ConvBatchNorm(layers.Layer):
         self.Layer1 = Conv2D(filters,kernel_size,strides,padding)
         self.Layer2 = BatchNormalization()
         self.Layer3 = ReLU()
-        
+
+    @function    
     def call(self,inputs,training = None):
         x = self.Layer1(inputs)
         x = self.Layer2(x,training = training)
@@ -61,7 +64,8 @@ class InceptionV1(layers.Layer):
         
         self.Layer3 = Concatenate()
         self.Layer4 = ReLU()
-        
+
+    @function  
     def call(self, inputs, training = None):
         x1 = self.Layer11(inputs,training)
         x2 = self.Layer12(inputs,training)
@@ -92,7 +96,8 @@ class InceptionV2(layers.Layer):
         
         self.Layer4 = Concatenate()
         self.Layer5 = ReLU()
-        
+
+    @function   
     def call(self, inputs, training = None):
         x1 = self.Layer11(inputs,training)
         
