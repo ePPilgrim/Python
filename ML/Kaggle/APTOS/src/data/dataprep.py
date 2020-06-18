@@ -95,9 +95,9 @@ class ImageDataPreparation(object):
 				ik += 1
 			dest = os.path.join(distDir,fileName)
 			img = ImagePreprocessing.LoadImage(file)
+			self.ImgPrep(img)
 			if augmented:
 				img = self.ImgAugm(img)
-			self.ImgPrep(img)
 			self.ImgPrep.SaveModifiedImage(dest)
 					
 	def _get_single_train_test(self, cat, split = 0.1):

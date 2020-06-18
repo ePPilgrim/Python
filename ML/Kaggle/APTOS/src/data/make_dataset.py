@@ -28,7 +28,7 @@ def main(input_projectdir, traincnt, testcnt):
     destTrainAugmDir = os.path.join(input_projectdir, os.environ.get("PROC_TRAIN_AUG_DIR"))
 
     imgPrep = pr.PreprocessImage(cropTol = 7)
-    imgAugm = pr.Augmentation(sigma = 16)
+    imgAugm = pr.Augmentation(sigma_noise = 16)
     dataProc = dp.ImageDataPreparation(imgPrep, imgAugm, dfFilePath, idColName, catColName,
                                  srcDir, destTestOrigDir, destTestAugmDir, destTrainOrigDir, destTrainAugmDir, [0,1,2])
     

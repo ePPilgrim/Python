@@ -6,6 +6,7 @@ from pathlib import Path
 from dotenv import find_dotenv, load_dotenv
 import pandas as pd
 import dataprep as dp
+import numpy as np
 
 @click.command()
 @click.argument('input_projectdir', type=click.Path(exists=True))
@@ -27,6 +28,7 @@ def main(input_projectdir, traincnt, testcnt):
 
     df = pd.read_csv(dfFilePath)
     catv = df[catColName].unique()
+    catv = np.array([3,4])
     dataFramePrep = dp.DataFramePreparation(traincnt, procDfTrainFilePath, destTrainOrigDir, destTrainAugmDir,
                                          testcnt, procDfTestFilePath, destTestOrigDir, destTestAugmDir)
     dataFramePrep(catv)
