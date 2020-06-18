@@ -73,7 +73,7 @@ class Sharppen(Transformation):
         return self._clip_(img)
 
 class Blur(Transformation):
-    def __init__(self, sigma = (0.5, 4.0)):
+    def __init__(self, sigma = (0.5, 3.0)):
         super().__init__()
         self.sigma = sigma
         

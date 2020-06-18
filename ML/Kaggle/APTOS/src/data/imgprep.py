@@ -37,16 +37,15 @@ def PreprocessImage(cropTol = 7):
     resize = tr.Resize((224,224))
     return ImagePreprocessing(tr.Pipe([crop, resize]))
 
-def Augmentation(sigma = 16):
+def Augmentation(sigma_noise = 16, sigma_blur = 1.5, sigma_sharppen = 64.0):
     effect = tr.Transformation()
     if np.random.randint(2) == 0:
-        effect = tr.Sharppen()
+        effect = tr.Sharppen(sigma = (16, sigma_sharppen))
     else:
-        effect = tf.Blur()
-        
+        effect = tr.Blur(sigma = (0.5, sigma_blur))    
     visEffects = tr.RandomVisualEffect()
-    gaussNoise = tr.AddGauseNoise(sigma)
-    return ImagePreprocessing(tr.Pipe([visEffects,gaussNoise]))
+    gaussNoise = tr.AddGauseNoise(sigma_noise)
+    return ImagePreprocessing(tr.Pipe([effect,visEffects,gaussNoise]))
 
 
 
