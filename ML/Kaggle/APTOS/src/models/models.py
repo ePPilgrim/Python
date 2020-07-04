@@ -67,17 +67,21 @@ class StemDecoratorDepthWiseConv(StemDecorator):
 class PredefinedModel(BaseModel):
     def __init__(self, model, top_layers = 1, intercept_module = BaseModel()):
         super(PredefinedModel,self).__init__()
+        if intercept_module is not None:
+            for key, val in intercept_module.__dict__.items():
+                if hasattr(self, key):
+                    setattr(self, key,val)
         self.top_layers = top_layers
-        self.tmodel = model
-        self.intercept_module = intercept_module
+        self.pred_model = model
 
     def getDescription(self):
-        return self.tmodel.name + "_" + self.intercept_module.getDescription()
+        id = self.pred_model.name + "_TL{}" + "_" + super(PredefinedModel,self).getDescription()
+        return id.format(self.top_layers)
 
     def build_core_part_of_model(self, model):
-        for m in self.tmodel.layers:
+        for m in self.pred_model.layers:
             m.trainable = True
-        for i in range(len(self.tmodel.layers) - self.top_layers):
-            self.tmodel.layers[i].trainable = False
-        model.add(self.tmodel)
+        for i in range(len(self.pred_model.layers) - self.top_layers):
+            self.pred_model.layers[i].trainable = False
+        model.add(self.pred_model)
         return model

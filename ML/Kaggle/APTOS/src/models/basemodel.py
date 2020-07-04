@@ -29,7 +29,7 @@ from tensorflow import function
 
 
 class BaseModel(object):
-    def __init__(self,filters = 32, units = 512, input_shape = (224,224,3), learn_rate = 0.0001, conv_layer_cnt = None, L1 = None, L2 = None, dropout = None):
+    def __init__(self,filters = 32, units = 512, input_shape = (224,224,3), learn_rate = 0.0001, conv_layer_cnt = None, top_layer_cnt = 1, L1 = None, L2 = None, dropout = None, version = 0):
         self.filters = filters
         self.units = units
         self.input_shape = input_shape
@@ -38,33 +38,38 @@ class BaseModel(object):
         self.l2 = L2
         self.drop = dropout
         self.conv_layer_cnt = conv_layer_cnt
+        self.top_layer_cnt = top_layer_cnt
         self.model = None
+        self.version = version
         upperlim = int(math.log2(min(input_shape[0:1]))) - 1
         if self.conv_layer_cnt is None or self.conv_layer_cnt > upperlim:
             self.conv_layer_cnt = upperlim
         
     def getDescription(self):
-        name = "{}_F{}_U{}_LR{}".format(type(self).__name__, self.filters,self.units,str(self.learn_rate).split('.')[1])
+        name = "{}_F{}_U{}x{}_LR{}".format(type(self).__name__, self.filters,self.units,self.top_layer_cnt,
+                                           "{:.12f}".format(self.learn_rate).split('.')[1].rstrip('0'))
         if self.l1 is not None:
-            name += '_L1{}'.format(str(self.l1).split('.')[1])
+            name += '_L1' + "{:.12f}".format(self.l1).split('.')[1].rstrip('0')
         if self.l2 is not None:
-            name += '_L2{}'.format(str(self.l2).split('.')[1])
+            name += '_L2' + "{:.12f}".format(self.l2).split('.')[1].rstrip('0')
         if self.drop is not None:
-            name += '_D{}'.format(str(self.drop).split('.')[1])
+            name += '_D' + "{:.12f}".format(self.drop).split('.')[1].rstrip('0')
         if self.conv_layer_cnt is not None:
             name += '_LCnt{}'.format(self.conv_layer_cnt)
+        name += '_V'.format(self.version)
         return name
     
     def compliteModelCreation(self,model):
         model.add(GlobalAveragePooling2D())
         if self.drop is not None:
             model.add(Dropout(self.drop))
-        if self.l2 is not None:
-            model.add(Dense(self.units, activation = 'relu',kernel_regularizer = regularizers.l2(self.l2)))
-        elif self.l1 is not None:
-            model.add(Dense(self.units, activation = 'relu',kernel_regularizer = regularizers.l1(self.l1)))
-        else:
-            model.add(Dense(self.units, activation = 'relu')) 
+        for _ in range(self.top_layer_cnt):
+            if self.l2 is not None:
+                model.add(Dense(self.units, activation = 'relu',kernel_regularizer = regularizers.l2(self.l2)))
+            elif self.l1 is not None:
+                model.add(Dense(self.units, activation = 'relu',kernel_regularizer = regularizers.l1(self.l1)))
+            else:
+                model.add(Dense(self.units, activation = 'relu')) 
         model.add(Dense(1, activation = 'sigmoid'))
         model.compile(optimizer=Adam(lr=self.learn_rate),loss=BinaryCrossentropy(),metrics=['accuracy'])
         print('Model {} is built'.format(model.name))
