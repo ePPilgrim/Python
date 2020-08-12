@@ -94,5 +94,7 @@ __pycache__/
 .vs/*
 .vscode/*
 notebooks/logs/*
-reference/proc_test.csv
-reference/proc_train.csv
+references/proc_test.csv
+references/proc_train.csv
+models
+notebooks/temp
