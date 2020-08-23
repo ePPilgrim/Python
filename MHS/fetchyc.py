@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import os as os
+import tensorflow as tf
 
 TermMapToMonth = { 'M01' : 1.0, 'M02' : 2.0, 'M03' : 3.0, 'M04' : 4.0, 'M05' : 5.0, 'M06' : 6.0, 'M07' : 7.0, 'M08' : 8.0,
                     'M09' : 9.0, 'M10' : 10.0, 'M11' : 11.0, 
@@ -75,7 +76,6 @@ def FirstConversion(srcdir = r'.\data\raw\YC', destdir = r'.' , asnan = -256.0):
                     country = CountriesMap[country]
                 save_df(df, destdir, country, continent)
                 
-@tf.function
 def mapelement(table):
     obss = tf.convert_to_tensor(np.array([[-256.0], [-256.0]]), dtype = tf.float32)
     for key, x in TermMapToMonth.items():
