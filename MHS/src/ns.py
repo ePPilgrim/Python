@@ -1,11 +1,10 @@
-
 import tensorflow as tf
 import pandas as pd
 import numpy as np
 import os
 
 
-TermMapToMonth = { '1W' : 0.25, '2W' : 0.5, 'M01' : 1.0, 'M02' : 2.0, 'M03' : 3.0, 'M04' : 4.0, 'M05' : 5.0, 'M06' : 6.0, 'M07' : 7.0, 'M08' : 8.0,
+TermMapToMonth = { 'F1' : 0.25, 'F2' : 0.5, 'M01' : 1.0, 'M02' : 2.0, 'M03' : 3.0, 'M04' : 4.0, 'M05' : 5.0, 'M06' : 6.0, 'M07' : 7.0, 'M08' : 8.0,
                     'M09' : 9.0, 'M10' : 10.0, 'M11' : 11.0, 
                     'Y01' : 12.0, 'Y02' : 24.0, 'Y03' : 36.0, 'Y04' : 48.0, 'Y05' : 60.0, 'Y06' : 72.0, 'Y07' : 84.0,
                     'Y08' : 96.0, 'Y09' : 108.0, 'Y10' : 120.0, 'Y12' : 144.0, 'Y15' : 180.0, 'Y20' : 240.0,
@@ -48,7 +47,7 @@ class NelsonSiegelLayer(tf.keras.layers.Layer):
                                         tf.math.multiply(self.alpha2, val3 - val2)))
 
 class NelsonSiegelParameters:
-    def __init__(self, ww = 13, thauv = [32, 64, 128], lr = 0.1, epochs = 200):
+    def __init__(self, ww = 13, thauv = [16, 64, 128], lr = 0.1, epochs = 200):
         self.ww = ww
         self.thauv = thauv
         self.nsld = {thau : NelsonSiegelLayer(thau0 = thau) for thau in self.thauv}
@@ -107,15 +106,16 @@ class NelsonSiegelParameters:
         self.resdf['Date'] = pd.to_datetime(self.resdf['Date'].str.decode('utf-8'))
         return self.resdf
     
-def SaveNSParameters(dirpath, ww = 13, epochs = 200):
-    for filename in os.listdir(dirpath):
-        filepath = os.path.join(dirpath,filename)
+def SaveNSParameters(srcdir, destdir, ww = 13, epochs = 200, thauv = [16, 64, 128]):
+    engine, df = None, None
+    for filename in os.listdir(srcdir):
+        filepath = os.path.join(srcdir,filename)
         if os.path.isfile(filepath):
-            engine = NelsonSiegelParameters(ww = ww, epochs = epochs)
+            engine = NelsonSiegelParameters(ww = ww, epochs = epochs, thauv = thauv)
             df_ext = engine.find_parameters(filepath)
             df_orig = pd.read_csv(filepath, converters = {'Date' : lambda x: pd.to_datetime(x)})
             df = df_orig.merge(df_ext,on = 'Date', sort = True, how = 'outer')
-            file_name, file_extension = os.path.splitext(filepath)
-            newfilepath = file_name + '_ns' + file_extension
-            df.to_csv(newfilepath)
-            return df
+            file_name, file_extension = os.path.splitext(filename)
+            newfilename = file_name + '_ns' + file_extension
+            df.to_csv(os.path.join(destdir, newfilename))
+    return (engine, df)

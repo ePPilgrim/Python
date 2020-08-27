@@ -1,0 +1,6 @@
+**/__pycache__
+*.exe
+*.png
+*.jpg
+temp
+.ipynb_checkpoints
