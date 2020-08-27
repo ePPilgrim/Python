@@ -3,18 +3,18 @@ import pandas as pd
 import os as os
 import tensorflow as tf
 
-TermMapToMonth = { 'M01' : 1.0, 'M02' : 2.0, 'M03' : 3.0, 'M04' : 4.0, 'M05' : 5.0, 'M06' : 6.0, 'M07' : 7.0, 'M08' : 8.0,
+TermMapToMonth = { '1W' : 0.25, '2W' : 0.5, 'M01' : 1.0, 'M02' : 2.0, 'M03' : 3.0, 'M04' : 4.0, 'M05' : 5.0, 'M06' : 6.0, 'M07' : 7.0, 'M08' : 8.0,
                     'M09' : 9.0, 'M10' : 10.0, 'M11' : 11.0, 
                     'Y01' : 12.0, 'Y02' : 24.0, 'Y03' : 36.0, 'Y04' : 48.0, 'Y05' : 60.0, 'Y06' : 72.0, 'Y07' : 84.0,
                     'Y08' : 96.0, 'Y09' : 108.0, 'Y10' : 120.0, 'Y12' : 144.0, 'Y15' : 180.0, 'Y20' : 240.0,
                     'Y25' : 300.0, 'Y30' : 360.0, 'Y40' : 480.0, 'Y50' : 600.0}
 
-TermsMap = {'1-Month' : 'M01', '2-Month' : 'M02', '3-Month' : 'M03', '4-Month' : 'M04', '5-Month' : 'M05', '6-Month' : 'M06',
+TermsMap = {'1-Week' : '1W', '2-Week' : '2W', '1-Month' : 'M01', '2-Month' : 'M02', '3-Month' : 'M03', '4-Month' : 'M04', '5-Month' : 'M05', '6-Month' : 'M06',
         '7-Month' : 'M07', '8-Month' : 'M08', '9-Month' : 'M09', '10-Month' : 'M10', '11-Month' : 'M11',
         '1-Year' : 'Y01', '2-Year' : 'Y02', '3-Year' : 'Y03', '4-Year' : 'Y04', '5-Year' : 'Y05', '6-Year' : 'Y06',
         '7-Year' : 'Y07', '8-Year' : 'Y08', '9-Year' : 'Y09', '10-Year' : 'Y10', '12-Year' : 'Y12', '15-Year' : 'Y15', '20-Year' : 'Y20',
         '25-Year' : 'Y25', '30-Year' : 'Y30', '40-Year' : 'Y40', '50-Year' : 'Y50'}
-CountriesMap = {'United Kingdom' : 'UK', 'USA' : 'US'}
+CountriesMap = {'United Kingdom' : 'UK', 'USA' : 'US', 'South Africa' : 'SA', 'Hong Kong' : 'HK'}
 
 def create_df_usa(countrypath):
     termsMap = {key.lower() : val for key, val in TermsMap.items()}
