@@ -37,6 +37,12 @@ class NelsonSiegelLayer(tf.keras.layers.Layer):
         self.alpha1.assign(tf.random.uniform(shape=(), minval = 0.0, maxval = 1.0))
         self.alpha2.assign(tf.random.normal(shape=()))
         
+    def assignValues(self, x):
+        self.thau.assign(x[0])
+        self.alpha0.assign(x[1])
+        self.alpha1.assign(x[2])
+        self.alpha2.assign(x[3])
+        
     def call(self, inputs):
         val1 = tf.divide(inputs, self.thau)
         val2 = tf.math.exp(-val1)
