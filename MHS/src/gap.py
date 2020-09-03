@@ -67,7 +67,7 @@ def transform_to_yc(x):
 
 def make_discriminator_model(wide = 64, deep = 1, alpha = 0.3):
     inputs = tfk.Input(shape = (4,))
-    x = tfkl.Lambda(lambda x : transform_to_yc(x))(inputs)
+    x = tfkl.Lambda(lambda x : x)(inputs) #transform_to_yc(x))(inputs)
     for _ in range(deep):
         x = tfkl.Dense(wide)(x)
         x = tfkl.LeakyReLU(alpha)(x)
