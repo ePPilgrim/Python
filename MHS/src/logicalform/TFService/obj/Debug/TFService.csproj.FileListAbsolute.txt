@@ -1,0 +1,10 @@
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\bin\Debug\TFService.exe.config
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\bin\Debug\TFService.exe
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\bin\Debug\TFService.pdb
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\obj\Debug\TFService.csprojAssemblyReference.cache
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\obj\Debug\TFService.csproj.CoreCompileInputs.cache
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\obj\Debug\TFService.exe
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\obj\Debug\TFService.pdb
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\bin\Debug\Newtonsoft.Json.dll
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\bin\Debug\Newtonsoft.Json.xml
+C:\Users\PLDD\Practice\GitHub\Python\MHS\logicalform\TFService\obj\Debug\TFService.csproj.CopyComplete
