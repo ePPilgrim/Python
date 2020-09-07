@@ -91,26 +91,27 @@ namespace TFService
 
         double convertToDouble(string str) => Convert.ToDouble(str, System.Globalization.CultureInfo.InvariantCulture);
 
-        public IEnumerable MergeToGrid(IList<double> actual, IList<double> predicted = null) {
+        public IList<CashFlows> MergeToGrid(IList<double> actual, IList<double> predicted = null) {
 
             if (predicted == null) {
-                return Enumerable.Range(0, NumberOfLine).Select(x => new { True = actual[x], Predicted = 0.0 }).ToList();
+                return Enumerable.Range(0, NumberOfLine).Select(x => new CashFlows(){ True = actual[x], Predicted = 0.0, AbsRelError = 100.0 }).ToList();
             }
-            return Enumerable.Range(0, NumberOfLine).Select(x => new { True = actual[x], Predicted = predicted[x] });   
+            return Enumerable.Range(0, NumberOfLine).Select(x => new CashFlows(){
+                True = actual[x], Predicted = predicted[x],
+                AbsRelError = Math.Abs(100.0 * ((actual[x] - predicted[x])/actual[x]))
+            }).ToList();
         }
 
-        public IEnumerable VarToGrid(List<double> actual, List<double> predicted) {
+        public IList<VaR> VarToGrid(List<double> actual, List<double> predicted) {
             double[] risks = new double[] { 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1 };
             string[] repRisks = new string[] { "99%", "98%", "97%", "96%", "95%", "94%", "93%", "92%", "91%", "90%" };
 
             actual.Sort();
             predicted.Sort();
 
-            var res = Enumerable.Range(0, risks.Length)
-                        .Select(x => new Tuple<string, int>( repRisks[x], Convert.ToInt32(risks[x] * NumberOfLine)))
-                        .Select(x => new { Risk = x.Item1, TrueVaR = actual[x.Item2], PredictedVaR = predicted[x.Item2]});
-
-            return res;
+            return Enumerable.Range(0, risks.Length)
+                        .Select(x => new Tuple<string, int>(repRisks[x], Convert.ToInt32(risks[x] * NumberOfLine)))
+                        .Select(x => new VaR(){ Risk = x.Item1, TrueVaR = actual[x.Item2], PredictedVaR = predicted[x.Item2] }).ToList();
         }
 
     }
