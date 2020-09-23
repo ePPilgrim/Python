@@ -18,33 +18,25 @@ namespace TFService
 
     public class CashFlows
     {
-        public CashFlows(double aTrue = 0.0, double aPredicted = 0.0)
-        {
-            True = aTrue;
-            Predicted = aPredicted;
-        }
         public double True;
         public double Predicted;
+        public double AbsRelError;
+
+        public string ToString()
+        {
+            return $"True = {True}, Predicted = {Predicted}, AbsRelError = {AbsRelError}";
+        }
     }
 
     public class VaR
     {
-        public VaR(string aRisk, double aTrueVar, double aPredictedVar)
-        {
-            Risk = aRisk;
-            TrueVar = aTrueVar;
-            PredictedVar = aPredictedVar;
-        }
-
-        public VaR(double aTrueVar, double aPredictedVar)
-        {
-            Risk = "";
-            TrueVar = aTrueVar;
-            PredictedVar = aPredictedVar;
-        }
 
         public string Risk;
-        public double TrueVar;
-        public double PredictedVar;
+        public double TrueVaR;
+        public double PredictedVaR;
+        public string ToString()
+        {
+            return $"Risk = {Risk}, TrueVaR = {TrueVaR}, PredictedVaR = {PredictedVaR}";
+        }
     }
 }
