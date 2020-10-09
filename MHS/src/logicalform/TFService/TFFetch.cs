@@ -98,7 +98,7 @@ namespace TFService
             }
             return Enumerable.Range(0, NumberOfLine).Select(x => new CashFlows(){
                 True = actual[x], Predicted = predicted[x],
-                AbsRelError = Math.Abs(100.0 * ((actual[x] - predicted[x])/actual[x]))
+                AbsRelError = Math.Abs(((actual[x] - predicted[x])/actual[x]))
             }).ToList();
         }
 

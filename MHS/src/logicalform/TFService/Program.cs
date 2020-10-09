@@ -47,7 +47,7 @@ namespace TFService
                 var pos = rnd.Next(0, 3000);
                 if( pos % 2 == 0)
                 {
-                    Console.WriteLine($"{val}");
+                    Console.WriteLine($"{val.ToString()}");
                     i++;
                 }
                 if(i > 10)
@@ -58,7 +58,7 @@ namespace TFService
             var vars = obj.VarToGrid(obj.Target.ToList(), predicted);
             foreach(var val in vars)
             {
-                Console.WriteLine($"{val}");
+                Console.WriteLine($"{val.ToString()}");
             }
 
         }

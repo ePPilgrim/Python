@@ -2,3 +2,5 @@
 *.exe
 *.png
 *.jpg
+obj
+bin
